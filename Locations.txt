@@ -1,0 +1,3 @@
+AF_UNIX socket in /var/run/
+Settings file in same folder for now
+Log files in /var/log/obm-bob/

@@ -1,0 +1,19 @@
+<gui start="idle">
+	<screen name="idle" >
+		<string type="text" align="right" row="0">This is a test.</string>
+		<string type="eval" align="center" row="1">time.strftime("%d/%m/%Y  %H:%M:%S")</string>
+		<command>if pressed == 'OK': screen, prev_screen = change_screen('menu')</command>
+	</screen>
+	<screen name="menu">
+		<string type="text" align="left" row="0">Main menu:</string>
+		<list height="3" width="20" cursor=">" row="1">
+			<li next='datetime'>Date/Time</li>
+			<li>Option B</li>
+			<li>Option C</li>
+			<li>next line</li>
+		</list>
+		<command>if pressed == 'UP' and list_selected > 0: list_selected -= 1
+elif pressed == 'DOWN': list_selected += 1
+</command>
+	</screen>
+</gui>
