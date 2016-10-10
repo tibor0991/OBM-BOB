@@ -2,7 +2,6 @@ import json
 import random
 import time
 import sys
-import logging
 
 log_dict = {}
 
@@ -12,7 +11,7 @@ log_dict['log'] = []
 
 for i in range(0, int(sys.argv[1])):
 	entry_dict = {}
-	entry_dict['date'] = time.strftime('%d/%m/%y')
+	entry_dict['date'] = time.strftime('%d/%m/%Y')
 	entry_dict['time'] = time.strftime('%H:%M:%S')
 	entry_dict['value'] = '%.1f' % (36.5+(random.random() * 6 - 3))
 	log_dict['log'].append(entry_dict)

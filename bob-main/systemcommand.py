@@ -1,6 +1,7 @@
 from command import CommandInterface
 from multiprocessing import Process
 import json
+import data_logger
 
 class SystemCommand(CommandInterface, Process):
 	def __init__(self, data):
@@ -30,6 +31,12 @@ class SystemCommand(CommandInterface, Process):
 		elif cmd_args[0] == 'reset-alarms':
 			self.data['alarms'] = {}
 			return 'OK'
+		elif cmd_args[0] == 'request-log':
+			print 'I must prepare a log here...'
+			log = data_logger.readLog(cmd_args[1])
+			log_dict = { 'value_type' : cmd_args[1], 'log' : log}
+			print log_dict
+			return json.dumps(log_dict)
 		else:
 			print 'Unrecognized command: '+cmd
 			return 'ERROR'

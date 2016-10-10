@@ -4,6 +4,7 @@ from settings import Settings
 import netifaces
 import logging
 import alarms
+import data_logger
 
 class Updater(Process):
 	def __init__(self, data):
@@ -49,6 +50,7 @@ class Updater(Process):
 			self.data['ip'] = netifaces.ifaddresses('eth0')[netifaces.AF_INET][0]['addr']
 			
 			#save this reading in a logfile
+			data_logger.addLogEntry(self.data['temp'], self.data['hum'])
 			
 	def _turnPadOn(self):
 		self.data['pad'] = 'on'
