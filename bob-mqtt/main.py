@@ -7,8 +7,7 @@ import time
 import json
 
 
-#id = sender.sendMessage('get ip')
-id = '192.168.137.156'
+id = sender.sendMessage('get ip')
 log_request = 'obm/bob/{}/logs/request'.format(id)
 log_reply = 'obm/bob/{}/logs/reply'.format(id)
 lights = 'obm/bob/{}/lights'.format(id)
@@ -16,6 +15,7 @@ alarm_topic = 'obm/bob/{}/alarms'.format(id)
 status_topic = 'obm/bob/{}/values/status'.format(id)
 
 def on_message(client, userdata, msg):
+	#print msg.topic, str(msg.payload)
 	#process the lights command
 	if msg.topic == lights:
 		sender.sendMessage('set lamp '+str(msg.payload))
@@ -30,27 +30,32 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_message = on_message
 
-client.connect('broker.hivemq.com', 1883, 60)
+try:
+	client.connect('test.mosquitto.org', 1883, 60)
+except:
+	client.connect('broker.hivemq.com', 1883, 60)
 
 client.subscribe([(log_request,0), (lights,0)])
 client.loop_start()
-while True:
-	#publishes the status JSON
-	status_data = sender.sendMessage('get status')
-	
-	client.publish(status_topic, status_data, retain=True)
-	
-	#send alarms
-	alarm_data = sender.sendMessage('get alarms')
-	
-	alarm_dict = {}
-	alarm_codes = [str(key) for key in json.loads(alarm_data).keys()]
-	
-	if alarm_codes:
-		print alarm_codes
-		alarm_dict['alarms'] = alarm_codes
-		alarm_dict['ip'] = id
-		client.publish(alarm_topic, json.dumps(alarm_dict))
-	
-	
-	time.sleep(10)
+try:
+	while True:
+		#publishes the status JSON
+		status_data = sender.sendMessage('get status')
+		
+		client.publish(status_topic, status_data, retain=True)
+		
+		#send alarms
+		alarm_data = sender.sendMessage('get alarms')
+		
+		alarm_dict = {}
+		alarm_codes = [str(key) for key in json.loads(alarm_data).keys()]
+		
+		if alarm_codes:
+			alarm_dict['alarms'] = alarm_codes
+			alarm_dict['ip'] = id
+			client.publish(alarm_topic, json.dumps(alarm_dict))
+		time.sleep(10)
+except:
+	print 'bob-mqtt interrupted'
+finally:
+	client.loop_stop()

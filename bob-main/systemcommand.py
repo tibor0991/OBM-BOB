@@ -32,10 +32,12 @@ class SystemCommand(CommandInterface, Process):
 			self.data['alarms'] = {}
 			return 'OK'
 		elif cmd_args[0] == 'request-log':
-			print 'I must prepare a log here...'
-			log = data_logger.readLog(cmd_args[1])
-			log_dict = { 'value_type' : cmd_args[1], 'log' : log}
-			print log_dict
+			value_type = cmd_args[1]
+			start = cmd_args[2]+' '+cmd_args[3]
+			end = cmd_args[4]+' '+cmd_args[5]
+			log = data_logger.readLog(value_type, start, end)
+			log_dict = { 'value_type' : value_type, 'log' : log}
+			print len(json.dumps(log_dict))
 			return json.dumps(log_dict)
 		else:
 			print 'Unrecognized command: '+cmd

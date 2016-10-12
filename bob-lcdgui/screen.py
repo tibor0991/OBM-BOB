@@ -27,17 +27,25 @@ class IdleScreen(Screen):
 		
 	def _update(self, command):
 		self.view.lines[0] = time.strftime("%d/%m/%Y  %H:%M:%S")
-		self.view.lines[1] = 'Temperature: %.2f C' % float(sender.sendMessage('get temp'))
-		self.view.lines[2] = 'Humidity: %.2f %%' % float(sender.sendMessage('get hum'))
+		self.view.lines[1] = 'Temperature: %.1f C' % float(sender.sendMessage('get temp'))
+		self.view.lines[2] = 'Humidity: %.0f %%' % float(sender.sendMessage('get hum'))
+		fan_in = int(float(sender.sendMessage('get fan_in'))*100)/25
+		fan_out = int(float(sender.sendMessage('get fan_out'))*100)/25
+		self.view.lines[3] = 'Fan IN:'+'='*fan_in+' '*(4-fan_in)+' OUT:'+'='*fan_out
 		if command == 'OK':
 			return MenuScreen(self.display)
-		else:
-			return self
+		elif command == 'UP':
+			if sender.sendMessage('get lamp') == 'on':
+				sender.sendMessage('set lamp off')
+			else:
+				sender.sendMessage('set lamp on')
+			
+		return self
 	
 class MenuScreen(Screen):
 	def __init__(self, display):
 		super(MenuScreen, self).__init__(display)
-		self.view = Views.ListView(self.display, 'Menu', ['Date && Time', 'Sensor bias', 'Set point', 'Logging'])
+		self.view = Views.ListView(self.display, 'Menu', ['Date & Time', 'Sensor bias', 'Set point', 'Logging'])
 		
 	def _update(self, command):
 		self.trigger = True
@@ -91,29 +99,61 @@ class DatetimeScreen(Screen):
 		self.view = Views.SpinnerView(self.display, 'Date & Time:')
 		currentDT = time.localtime()
 		
-		days_n = calendar.monthrange(currentDT.tm_year, currentDT.tm_mon)[1]
-		days_values = range(1, days_n+1)
+		days_values = range(1, self.daysOfMonth(currentDT.tm_year, currentDT.tm_mon)+1)
 		months_values = range(1,13)
 		years_values = range(2016, 2117)
 		#sets the days spinner
-		days_spinner = Views.Spinner(days_values, '{0:02d}/')
+		days_spinner = Views.Spinner(days_values, '{0:02d}')
 		days_spinner.spinIndex = currentDT.tm_mday-1
 		#sets the months spinner
-		months_spinner = Views.Spinner(months_values, '{0:02d}/')
+		months_spinner = Views.Spinner(months_values, '{0:02d}')
 		months_spinner.spinIndex = currentDT.tm_mon-1
 		#sets the years spinner
-		years_spinner = Views.Spinner(years_values)
+		years_spinner = Views.Spinner(years_values, '{}')
 		years_spinner.spinIndex = currentDT.tm_year-2016
+		#sets the hours spinner
+		hours_spinner = Views.Spinner(range(0, 24), '{:02d}')
+		hours_spinner.spinIndex = currentDT.tm_hour
+		#sets the minute spinner
+		minutes_spinner = Views.Spinner(range(0, 60), '{:02d}')
+		minutes_spinner.spinIndex = currentDT.tm_min
+		#sets the seconds spinner
+		seconds_spinner = Views.Spinner(range(0, 60), '{:02d}')
+		minutes_spinner.spinIndex = currentDT.tm_sec
 		
 		self.view.addSpinner(days_spinner)
+		self.view.addSeparator('/')
 		self.view.addSpinner(months_spinner)
+		self.view.addSeparator('/')
 		self.view.addSpinner(years_spinner)
+		self.view.addSeparator('  ')
+		self.view.addSpinner(hours_spinner)
+		self.view.addSeparator(':')
+		self.view.addSpinner(minutes_spinner)
+		self.view.addSeparator(':')
+		self.view.addSpinner(seconds_spinner)
 	
 	def _setDaySpinnerVals(self):
 		months_spinner = self.view.spinners[1]
 		if months_spinner.getValue() == 2:
 			year = self.view.spinners[2].getValue()
 			self.view.spinners[0].setValues(calendar.monthrange(year, 2)[1])
+			
+	def daysOfMonth(self, year, month):
+		days_n = calendar.monthrange(year, month)[1]
+		return days_n
+		
+	def updateDays(self):
+		year = self.view.spinners[2].getValue()
+		month = self.view.spinners[1].getValue()
+		prev_day = self.view.spinners[0].getValue()
+		max_days = self.daysOfMonth(year, month)
+		self.view.spinners[0].setValues(range(1, max_days+1))
+		if prev_day > max_days:
+			self.view.spinners[0].spinIndex = max_days-1
+		else:
+			self.view.spinners[0].spinIndex = prev_day-1
+			
 	
 	def _update(self, command):
 		self.trigger = True
@@ -136,7 +176,8 @@ class DatetimeScreen(Screen):
 			return MenuScreen(self.display)
 		else:
 			self.trigger = False
-		#if self.trigger is True: self._setDaySpinnerVals()
+		if self.trigger:
+			self.updateDays()
 		return self
 
 class AlarmScreen(Screen):

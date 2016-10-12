@@ -52,12 +52,12 @@ class ListView(View):
 	def getOptionIndex(self):
 		return self.listIndex
 		
-		
 class Spinner:
 	SPIN_DOWN = 1
 	SPIN_UP = -1
 	def __init__(self, values, format_str='{}'):
 		self.setValues(values)
+		self.spinIndex = 0
 		self.format_str = format_str
 		
 	def spinUp(self):
@@ -77,28 +77,43 @@ class Spinner:
 		
 	def setValues(self, values):
 		self.values = values
-		self.spinIndex = 0
-	
-	def getSplitter(self):
-		return self.splitter
 		
-	
+		
+class Separator:
+	def __init__(self, symbol):
+		self.symbol = symbol
+	def getSymbol(self):
+		return self.symbol
 		
 class SpinnerView(View):
 	def __init__(self, display, title):
 		super(SpinnerView, self).__init__(display)
 		self.lines[0] = title
 		self.spinners = []
+		self.elements = []
 		self.spinnerIndex = 0
+		self.elementsIndex = 0
 		
 	def addSpinner(self, spinner):
 		self.spinners.append(spinner)
+		self.elements.append(spinner)
+		
+	def addSeparator(self, symbol):
+		self.elements.append(Separator(symbol))
 		
 	def nextSpinner(self):
 		self.spinnerIndex = (self.spinnerIndex + 1) % len(self.spinners)
+		while True:
+			self.elementsIndex = (self.elementsIndex + 1) % len(self.elements)
+			if self.elements[self.elementsIndex].__class__ == Spinner:
+				break
 		
 	def prevSpinner(self):
 		self.spinnerIndex = (self.spinnerIndex - 1) % len(self.spinners)
+		while True:
+			self.elementsIndex = (self.elementsIndex - 1) % len(self.elements)
+			if self.elements[self.elementsIndex].__class__ == Spinner:
+				break
 		
 	def getSelectedSpinner(self):
 		return self.spinners[self.spinnerIndex]
@@ -106,14 +121,19 @@ class SpinnerView(View):
 	def _update(self):
 		spinner_line = ''
 		cursor_start = 0
-		for spinner in self.spinners:
-			if spinner == self.getSelectedSpinner():
+		for element in self.elements:
+			if element == self.getSelectedSpinner():
 				cursor_line_prefix = ' '*cursor_start
-				cursor_line_cursor = '^'*len(str(spinner.getValue()))
+				cursor_line_cursor = '^'*len(str(element.getFormattedValue()))
 				cursor_line_suffix = ' '*(20-len(cursor_line_prefix+cursor_line_cursor))
 				cursor_line = cursor_line_prefix+cursor_line_cursor+cursor_line_suffix
 				self.lines[3] = cursor_line
-			spinner_line += spinner.getFormattedValue()
+			if element.__class__ == Spinner:
+				spinner_line += element.getFormattedValue()
+			elif element.__class__ == Separator:
+				spinner_line += element.getSymbol()
+			else:
+				spinner_line += 'ERR'
 			cursor_start = len(spinner_line)
 			
 		self.lines[2] = spinner_line

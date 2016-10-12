@@ -22,7 +22,9 @@ class System():
 			'sensors' : self.manager.list([Sensor(4), Sensor(17)]),
 			'temp' : 0,
 			'hum' : 0,
-			'alarms' : self.manager.dict() #if map empty => all green
+			'alarms' : self.manager.dict(), #if map empty => all green
+			'fan_in' : 0.5,
+			'fan_out': 0.5
 		})		
 		
 		self.sharedData.update(self.currentSettings.set_d)
